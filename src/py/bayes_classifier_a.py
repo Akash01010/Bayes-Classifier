@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 ####################################################################################### 1st Class ############################################################################################
-file1=open("LS_Group2/Class1.txt")
+file1=open("../../data/LS_Group2/Class1.txt")
 data = []
 for line in file1:
     number_strings = line.split() #splits across whitespaces
@@ -24,8 +24,8 @@ variance1y=math.sqrt(sum((class1_train[i][1]-mean1[1])*(class1_train[i][1]-mean1
 
 
 ####################################################################################### 2nd Class ############################################################################################
-file2=open("LS_Group2/Class2.txt")
-data2 = []
+file2=open("../../data/LS_Group2/Class2.txt")
+data = []
 for line in file2:
     number_strings = line.split() #splits across whitespaces
     numbers = [float(n) for n in number_strings]    
@@ -43,7 +43,7 @@ variance2y=math.sqrt(sum((class2_train[i][1]-mean2[1])*(class2_train[i][1]-mean2
 
 
 ####################################################################################### 3rd Class ############################################################################################
-file3=open("LS_Group2/Class3.txt")
+file3=open("../../data/LS_Group2/Class3.txt")
 data = []
 for line in file3:
     number_strings = line.split() #splits across whitespaces
