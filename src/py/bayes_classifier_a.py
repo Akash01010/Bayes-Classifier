@@ -13,7 +13,7 @@ for line in file1:
 
 class1=np.array(data)
 
-data_train=[data[i] for i in range(0.75*len(class1))]
+data_train=[data[i] for i in range(len(class1))]
 
 class1_train=np.array(data_train)
 mean1=class1_train.mean(axis=0)
@@ -27,13 +27,13 @@ variance1y=math.sqrt(sum((class1_train[i][1]-mean1[1])*(class1_train[i][1]-mean1
 file2=open("../../data/LS_Group2/Class2.txt")
 data = []
 for line in file2:
-    number_strings = line.split() #splits across whitespaces
-    numbers = [float(n) for n in number_strings]    
-	data.append(numbers)
+    number_strings = line.split()#splits across whitespaces
+    numbers = [float(n) for n in number_strings]
+    data.append(numbers)
 
 class2=np.array(data)
 
-data_train=[data[i] for i in range(0.75*len(class2))]
+data_train=[data[i] for i in range(len(class2))]
 
 class2_train=np.array(data_train)
 mean2=class2_train.mean(axis=0)
@@ -49,10 +49,9 @@ for line in file3:
     number_strings = line.split() #splits across whitespaces
     numbers = [float(n) for n in number_strings]
     data.append(numbers)
-
 class3=np.array(data)
 
-data_train=[data[i] for i in range(0.75*len(class3))]
+data_train=[data[i] for i in range(len(class3))]
 
 class3_train=np.array(data_train)
 mean3=class3_train.mean(axis=0)
