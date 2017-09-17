@@ -1,16 +1,11 @@
+#	CS669 - Assignment 1 (Group-2) [17/9/17]
 #	About: 
 #		This program classifies the data for different classes by
-#		assuming the case when Covariance Matrix = (sigma)^2*I
-#		and is same for all classes.
+#		assuming the case when Covariance Matrix = (sigma)^2*I and is same for all classes.
 
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-
-#	Variable:
-#		classes - Array of training data for different classes
-#		mean - Array of mean vectors of different classes
-#		variance - Array of covariance matrices of different classes
 
 classes=[]
 classesRange=[]
@@ -20,10 +15,9 @@ variance=[]
 dimension=2
 confusionMatClass=[]
 confusionMatrix=[]
-constantDensityContours=[]
-total_variance=0
-
-#Funtion: calcPrereq
+covarianceMatrix=np.zeros(shape=(dimension,dimension))
+covarianceMatrixInv=np.zeros(shape=(dimension,dimension))
+average_variance=0
 
 def calcPrereq(filename):
 	file=open(filename)
@@ -55,7 +49,7 @@ def calcPrereq(filename):
 def gi(x):
 	val=[0 for i in range(len(classes))]
 	for i in range(len (classes)):
-		val[i]=-1.0/2.0/total_variance;
+		val[i]=-1.0/2.0/average_variance;
 		first_term=0;
 		for j in range(dimension):
 			first_term+=(x[j]-mean[i][j])*(x[j]-mean[i][j])
@@ -67,7 +61,7 @@ def gi(x):
 	return np.argmax(val)
 
 def g(x,first,second):
-	val=1.0/2.0/total_variance;
+	val=1.0/2.0/average_variance;
 	first_term=0;
 	for i in range(dimension):
 		first_term+=x[i]*(mean[second][i]-mean[first][i])
@@ -90,7 +84,6 @@ def calcConfusion():
 			x=testData[i][j]
 			ret=gi(x)
 			confusionMatrix[ret][i]+=1
-	
 
 def calcConfusionClass(ind):
 	temp=[[0 for i in range(2)] for i in range(2)]
@@ -117,6 +110,7 @@ print "1. Linearly Separable Data."
 print "2. Non-linearly Separable Data."
 print "3. Real World Data."
 choice=input("Choice : ")	
+
 if(choice==1):
 	calcPrereq("../../data/Input/ls_group2/Class1.txt")
 	calcPrereq("../../data/Input/ls_group2/Class2.txt")
@@ -136,10 +130,13 @@ choices=['ls','nl','rd']
 
 for i in range(len(classes)):
 	for j in range(dimension):
-		total_variance+=variance[i][j]
-total_variance/=len(classes)*dimension
+		average_variance+=variance[i][j]
+average_variance/=len(classes)*dimension
 
-print "\nThe average variance calculated for all classes comes out to be",total_variance
+covarianceMatrix=average_variance*np.identity(dimension)
+covarianceMatrixInv=np.asmatrix(covarianceMatrix).I
+
+print "\nThe average variance calculated for all classes comes out to be",average_variance
 
 print "\nThe mean and variance vectors for different classes are: \n"
 for i in range(len(mean)):
@@ -195,12 +192,6 @@ print "\nPlease wait for a minute or two while the program generates graphs..."
 
 colors=['b','g','r']
 colorsTestData=['c','m','y']
-
-for i in range(len(classes)):
-	circles=[]
-	for j in range(4):
-		circles.append(plt.Circle((mean[i][0],mean[i][1]),total_variance/float(j+1),color='black',fill=False))
-	constantDensityContours.append(circles)
 
 l=1
 f=[]
@@ -269,10 +260,22 @@ for i in range(len(f)):
 
 g=plt.figure(5)
 for j in range(len(classes)):
+	ax=plt.subplot(111)
 	plt.plot([classes[j][i][0] for i in range(len(classes[j]))],[classes[j][i][1] for i in range(len(classes[j]))],'.',color=colors[j],label='Class {i}'.format(i=j))
-for i in range(len(constantDensityContours)):	
-	for j in range(4):
-		plt.gca().add_patch(constantDensityContours[i][j])
+	u=[]
+	for k in range(dimension):
+		tempU=np.linspace(classesRange[j][0][k],classesRange[j][1][k],10)
+		u.append(tempU)
+	x,y=np.meshgrid(u[0],u[1]) 
+	temp=-0.5*covarianceMatrixInv
+	temp1=np.matmul(covarianceMatrixInv,mean[j])
+	const=np.matmul(np.matmul(mean[j].transpose(),temp),mean[j])
+	tot=0
+	for j in range(len(classes)):
+		tot+=len(classes[j])
+	constant=const[0,0]-0.5*math.log(np.linalg.det(covarianceMatrix))+math.log(float(len(classes[j]))/tot)
+	z=(temp[0,0])*(x**2)+2*(temp[0,1])*x*y+temp[1,1]*(y**2)+temp1[0,0]*x+temp1[0,1]*y+constant
+	ax.contour(x,y,z)
 
 g.suptitle("Constant Density Contours for all classes")
 g.savefig('../../data/Output/A_AllClasses_CDC_'+choices[choice-1]+'.png')

@@ -1,3 +1,4 @@
+#	CS669 - Assignment 1 (Group-2) [17/9/17]
 #	About: 
 #		This program classifies the data for different classes by
 #		assuming the case when all classes have full and different Covariance Matrices.
@@ -5,10 +6,6 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-
-#	Variable:
-#		classes - Array of training data for different classes
-#		mean - Array of mean vectors of different classes
 
 classes=[]
 classesRange=[]
@@ -19,9 +16,6 @@ dimension=2
 covarianceMatricesInv=[]
 confusionMatrix=[]
 confusionMatClass=[]
-constantDensityContours=[]
-
-#Funtion: calcPrereq
 
 def calcPrereq(filename):
 	file=open(filename)
@@ -64,7 +58,7 @@ def gi(x):
 		for j in range(dimension):
 			second_term+=tempSecondTerm[j,0]*x[j]
 			third_term+=tempSecondTerm[j,0]*mean[i][j]
-		third_term+math.log(np.linalg.det(covarianceMatricesInv[i]))
+		third_term+math.log(np.linalg.det(covarianceMatrices[i]))
 		third_term*=-0.5
 		tot=0
 		for j in range(len(classes)):
@@ -91,7 +85,7 @@ def classVal(x,ind):
 	for j in range(dimension):
 		second_term+=tempSecondTerm[j,0]*x[j]
 		third_term+=tempSecondTerm[j,0]*mean[ind][j]
-	third_term+math.log(np.linalg.det(covarianceMatricesInv[ind]))
+	third_term+math.log(np.linalg.det(covarianceMatrices[ind]))
 	third_term*=-0.5
 	tot=0
 	for j in range(len(classes)):
@@ -113,7 +107,6 @@ def calcConfusion():
 			x=testData[i][j]
 			ret=gi(x)
 			confusionMatrix[ret][i]+=1
-	
 
 def calcConfusionClass(ind):
 	temp=[[0 for i in range(2)] for i in range(2)]
@@ -159,6 +152,7 @@ print "1. Linearly Separable Data."
 print "2. Non-linearly Separable Data."
 print "3. Real World Data."
 choice=input("Choice : ")	
+
 if(choice==1):
 	calcPrereq("../../data/Input/ls_group2/Class1.txt")
 	calcPrereq("../../data/Input/ls_group2/Class2.txt")
@@ -237,12 +231,6 @@ print "\nPlease wait for a minute or two while the program generates graphs..."
 colors=['b','g','r']
 colorsTestData=['c','m','y']
 
-# for i in range(len(classes)):
-# 	circles=[]
-# 	for j in range(4):
-# 		circles.append(plt.Circle((mean[i][0],mean[i][1]),total_variance/float(j+1),color='black',fill=False))
-# 	constantDensityContours.append(circles)
-
 l=1
 f=[]
 
@@ -309,11 +297,22 @@ for i in range(len(f)):
 
 g=plt.figure(5)
 for j in range(len(classes)):
+	ax=plt.subplot(111)
 	plt.plot([classes[j][i][0] for i in range(len(classes[j]))],[classes[j][i][1] for i in range(len(classes[j]))],'.',color=colors[j],label='Class {i}'.format(i=j))
-# for i in range(len(constantDensityContours)):	
-# 	for j in range(4):
-# 		plt.gca().add_patch(constantDensityContours[i][j])
-
+	u=[]
+	for k in range(dimension):
+		tempU=np.linspace(classesRange[j][0][k],classesRange[j][1][k],10)
+		u.append(tempU)
+	x,y=np.meshgrid(u[0],u[1]) 
+	temp=-0.5*covarianceMatricesInv[j]
+	temp1=np.matmul(covarianceMatricesInv[j],mean[j])
+	const=np.matmul(np.matmul(mean[j].transpose(),temp),mean[j])
+	tot=0
+	for j in range(len(classes)):
+		tot+=len(classes[j])
+	constant=const[0,0]-0.5*math.log(np.linalg.det(covarianceMatrices[j]))+math.log(float(len(classes[j]))/tot)
+	z=(temp[0,0])*(x**2)+2*(temp[0,1])*x*y+temp[1,1]*(y**2)+temp1[0,0]*x+temp1[0,1]*y+constant
+	ax.contour(x,y,z)
 g.suptitle("Constant Density Contours for all classes")
 g.savefig('../../data/Output/D_AllClasses_CDC_'+choices[choice-1]+'.png')
 plt.axis('scaled')
