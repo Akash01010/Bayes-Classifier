@@ -132,6 +132,8 @@ elif(choice==3):
 else:
 	print "Wrong input! Exiting.\n"
 
+choices=['ls','nl','rd']
+
 for i in range(len(classes)):
 	for j in range(dimension):
 		total_variance+=variance[i][j]
@@ -230,6 +232,7 @@ for i in range(len(xRange)):
 for j in range(len(classes)):
 	plt.plot([classes[j][i][0] for i in range(len(classes[j]))],[classes[j][i][1] for i in range(len(classes[j]))],'o',color=colorsTestData[j],label='Class {i}'.format(i=j))
 f[l-2].suptitle("Decision Region plot for all Classes")
+f[l-2].savefig('../../data/Output/A_AllClasses_DR_'+choices[choice-1]+'.png')
 
 
 for j in range(len(classes)):
@@ -259,6 +262,7 @@ for j in range(len(classes)):
 			plt.plot([classes[k][i][0] for i in range(len(classes[k]))],[classes[k][i][1] for i in range(len(classes[k]))],'o',color=colorsTestData[k],label='Class {i}'.format(i=k))
 		label="Decision Region plot for class pair ("+str(j+1)+","+str(k+1)+")"
 		f[l-2].suptitle(label)
+		f[l-2].savefig('../../data/Output/A_ClassPair_'+str(j+1)+'_'+str(k+1)+'_DR_'+choices[choice-1]+'.png')
 
 for i in range(len(f)):
 	f[i].show()
@@ -271,6 +275,7 @@ for i in range(len(constantDensityContours)):
 		plt.gca().add_patch(constantDensityContours[i][j])
 
 g.suptitle("Constant Density Contours for all classes")
+g.savefig('../../data/Output/A_AllClasses_CDC_'+choices[choice-1]+'.png')
 plt.axis('scaled')
 g.show()
 
