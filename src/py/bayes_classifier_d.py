@@ -1,7 +1,7 @@
 #	CS669 - Assignment 1 (Group-2) [17/9/17]
 #	About: 
 #		This program classifies the data for different classes by
-#		assuming the case when Covariance Matrix = (sigma)^2*I and is same for all classes.
+#		assuming the case when all classes have full and different Covariance Matrices.
 
 import numpy as np
 import math
@@ -11,13 +11,11 @@ classes=[]
 classesRange=[]
 testData=[]
 mean=[]
-variance=[]
+covarianceMatrices=[]
 dimension=2
-confusionMatClass=[]
+covarianceMatricesInv=[]
 confusionMatrix=[]
-covarianceMatrix=np.zeros(shape=(dimension,dimension))
-covarianceMatrixInv=np.zeros(shape=(dimension,dimension))
-average_variance=0
+confusionMatClass=[]
 
 def calcPrereq(filename):
 	file=open(filename)
@@ -26,6 +24,7 @@ def calcPrereq(filename):
 		number_strings=line.split()
 		numbers=[float(n) for n in number_strings]
 		data.append(numbers)
+
 	tempClass=np.array(data)
 	tempClassRange=[]
 	tempClassRange.append(np.amin(tempClass,axis=0))
@@ -34,44 +33,68 @@ def calcPrereq(filename):
 	tempTestData=[data[i] for i in range(long(0.75*len(tempClass)),len(tempClass))]
 	tempClassTrain=np.array(data_train)
 	tempMean=tempClassTrain.mean(axis=0)
-	tempVariance=[0,0]
-	for j in range(len(tempMean)):
-		sumj=0
-		for i in range(len(tempClassTrain)):
-			sumj+=(tempClassTrain[i][j]-tempMean[j])*(tempClassTrain[i][j]-tempMean[j]);
-		tempVariance[j]=sumj/len(tempClassTrain)
 	classes.append(tempClassTrain)
 	mean.append(tempMean)
-	variance.append(tempVariance)
 	testData.append(tempTestData)
 	classesRange.append(tempClassRange)
 
 def gi(x):
 	val=[0 for i in range(len(classes))]
 	for i in range(len (classes)):
-		val[i]=-1.0/2.0/average_variance;
-		first_term=0;
+		first_term=0
+		tempFirstTerm=np.zeros(shape=(1,dimension))
 		for j in range(dimension):
-			first_term+=(x[j]-mean[i][j])*(x[j]-mean[i][j])
-		val[i]*=first_term
+			for k in range(dimension):
+				tempFirstTerm[0,j]+=x[k]*covarianceMatricesInv[i][k,j]
+		for j in range(dimension):
+			first_term+=tempFirstTerm[0,j]*x[j]
+		first_term*=-0.5
+		second_term=0
+		tempSecondTerm=np.zeros(shape=(dimension,1))
+		for j in range(dimension):
+			for k in range(dimension):
+				tempSecondTerm[j,0]+=covarianceMatricesInv[i][j,k]*mean[i][k]
+		third_term=0
+		for j in range(dimension):
+			second_term+=tempSecondTerm[j,0]*x[j]
+			third_term+=tempSecondTerm[j,0]*mean[i][j]
+		third_term+math.log(np.linalg.det(covarianceMatrices[i]))
+		third_term*=-0.5
 		tot=0
 		for j in range(len(classes)):
 			tot+=len(classes[j])
-		val[i]+=math.log(float(len(classes[i]))/tot)
+		third_term+=math.log(float(len(classes[i]))/tot)
+		val[i]=first_term+second_term+third_term
 	return np.argmax(val)
 
+def classVal(x,ind):
+	first_term=0
+	tempFirstTerm=np.zeros(shape=(1,dimension))
+	for j in range(dimension):
+		for k in range(dimension):
+			tempFirstTerm[0,j]+=x[k]*covarianceMatricesInv[ind][k,j]
+	for j in range(dimension):
+		first_term+=tempFirstTerm[0,j]*x[j]
+	first_term*=-0.5
+	second_term=0
+	tempSecondTerm=np.zeros(shape=(dimension,1))
+	for j in range(dimension):
+		for k in range(dimension):
+			tempSecondTerm[j,0]+=covarianceMatricesInv[ind][j,k]*mean[ind][k]
+	third_term=0
+	for j in range(dimension):
+		second_term+=tempSecondTerm[j,0]*x[j]
+		third_term+=tempSecondTerm[j,0]*mean[ind][j]
+	third_term+math.log(np.linalg.det(covarianceMatrices[ind]))
+	third_term*=-0.5
+	tot=0
+	for j in range(len(classes)):
+		tot+=len(classes[j])
+	third_term+=math.log(float(len(classes[ind]))/tot)
+	return first_term+second_term+third_term	
+
 def g(x,first,second):
-	val=1.0/2.0/average_variance;
-	first_term=0;
-	for i in range(dimension):
-		first_term+=x[i]*(mean[second][i]-mean[first][i])
-	first_term*=2
-	second_term=0;
-	for i in range(dimension):
-		second_term+=(mean[first][i]*mean[first][i])-(mean[second][i]*mean[second][i])
-	val*=first_term+second_term
-	val+=math.log(float(len(classes[first]))/len(classes[second]))
-	if val<0:
+	if classVal(x,first)-classVal(x,second)<0:
 		return first
 	else:
 		return second
@@ -101,9 +124,28 @@ def calcConfusionClass(ind):
 					temp[0][1]+=1
 				else:
 					temp[1][1]+=1
-	confusionMatClass.append(temp)
-	
-print "\nThis program is a Baye's Classifier assuming the case when Covariance Matrix = (sigma)^2*I and is same for all classes.\n"
+	confusionMatClass.append(temp) 
+
+def exp(ind,i,j):
+	sum=0
+	for k in range(len(classes[ind])):
+		x=classes[ind][k]
+		sum+=(x[i]-mean[ind][i])*(x[j]-mean[ind][j])
+	sum/=len(classes[ind])
+	return sum
+
+def calcCovarianceMat():
+	for i in range(len(classes)):
+		tempCovarianceMat=np.zeros(shape=(dimension,dimension))
+		for j in range(dimension):
+			for k in range(dimension):
+				tempCovarianceMat[j,k]=exp(i,j,k)
+		covarianceMatrices.append(tempCovarianceMat)
+	for i in range(len(classes)):
+		covarianceMatricesInv.append(np.asmatrix(covarianceMatrices[i]).I)
+
+
+print "\nThis program is a Baye's Classifier assuming the case when all classes have full but equal Covariance Matrices.\n"
 
 print "Enter which data you want to use : "
 print "1. Linearly Separable Data."
@@ -128,19 +170,15 @@ else:
 
 choices=['ls','nl','rd']
 
+calcCovarianceMat()
+
+print "\nThe mean vector and Covariance matrices for different classes are: \n"
+
 for i in range(len(classes)):
-	for j in range(dimension):
-		average_variance+=variance[i][j]
-average_variance/=len(classes)*dimension
-
-covarianceMatrix=average_variance*np.identity(dimension)
-covarianceMatrixInv=np.asmatrix(covarianceMatrix).I
-
-print "\nThe average variance calculated for all classes comes out to be",average_variance
-
-print "\nThe mean and variance vectors for different classes are: \n"
-for i in range(len(mean)):
-	print "Class ",i+1,": Mean - ",mean[i]," Var - ",variance[i]
+	print "Class ",i+1,":"
+	print "\nMean - ",mean[i]
+	print "\nCovariance Matrix - "
+	print covarianceMatrices[i],"\n"
 
 for i in range(len(classes)):
 	calcConfusionClass(i)
@@ -223,8 +261,7 @@ for i in range(len(xRange)):
 for j in range(len(classes)):
 	plt.plot([classes[j][i][0] for i in range(len(classes[j]))],[classes[j][i][1] for i in range(len(classes[j]))],'o',color=colorsTestData[j],label='Class {i}'.format(i=j))
 f[l-2].suptitle("Decision Region plot for all Classes")
-f[l-2].savefig('../../data/Output/A_AllClasses_DR_'+choices[choice-1]+'.png')
-
+f[l-2].savefig('../../data/Output/D_AllClasses_DR_'+choices[choice-1]+'.png')
 
 for j in range(len(classes)):
 	for k in range(j+1,len(classes)):
@@ -253,7 +290,7 @@ for j in range(len(classes)):
 			plt.plot([classes[k][i][0] for i in range(len(classes[k]))],[classes[k][i][1] for i in range(len(classes[k]))],'o',color=colorsTestData[k],label='Class {i}'.format(i=k))
 		label="Decision Region plot for class pair ("+str(j+1)+","+str(k+1)+")"
 		f[l-2].suptitle(label)
-		f[l-2].savefig('../../data/Output/A_ClassPair_'+str(j+1)+'_'+str(k+1)+'_DR_'+choices[choice-1]+'.png')
+		f[l-2].savefig('../../data/Output/D_ClassPair_'+str(j+1)+'_'+str(k+1)+'_DR_'+choices[choice-1]+'.png')
 
 for i in range(len(f)):
 	f[i].show()
@@ -267,20 +304,18 @@ for j in range(len(classes)):
 		tempU=np.linspace(classesRange[j][0][k],classesRange[j][1][k],10)
 		u.append(tempU)
 	x,y=np.meshgrid(u[0],u[1]) 
-	temp=-0.5*covarianceMatrixInv
-	temp1=np.matmul(covarianceMatrixInv,mean[j])
+	temp=-0.5*covarianceMatricesInv[j]
+	temp1=np.matmul(covarianceMatricesInv[j],mean[j])
 	const=np.matmul(np.matmul(mean[j].transpose(),temp),mean[j])
 	tot=0
 	for j in range(len(classes)):
 		tot+=len(classes[j])
-	constant=const[0,0]-0.5*math.log(np.linalg.det(covarianceMatrix))+math.log(float(len(classes[j]))/tot)
+	constant=const[0,0]-0.5*math.log(np.linalg.det(covarianceMatrices[j]))+math.log(float(len(classes[j]))/tot)
 	z=(temp[0,0])*(x**2)+2*(temp[0,1])*x*y+temp[1,1]*(y**2)+temp1[0,0]*x+temp1[0,1]*y+constant
 	ax.contour(x,y,z)
-
 g.suptitle("Constant Density Contours for all classes")
-g.savefig('../../data/Output/A_AllClasses_CDC_'+choices[choice-1]+'.png')
+g.savefig('../../data/Output/D_AllClasses_CDC_'+choices[choice-1]+'.png')
 plt.axis('scaled')
 g.show()
 
 plt.show()
-
