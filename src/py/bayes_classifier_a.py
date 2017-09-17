@@ -139,17 +139,14 @@ total_variance/=len(classes)*dimension
 
 print "\nThe average variance calculated for all classes comes out to be",total_variance
 
+print "\nThe mean and variance vectors for different classes are: \n"
+for i in range(len(mean)):
+	print "Class ",i+1,": Mean - ",mean[i]," Var - ",variance[i]
+
 for i in range(len(classes)):
 	calcConfusionClass(i)
 
 calcConfusion()
-
-print "\nThe mean vectors for different classes are: \n"
-for i in range(len(mean)):
-	print "Class ",
-	print i+1,
-	print ": ",
-	print mean[i]
 
 Accuracy=[]
 Precision=[]
