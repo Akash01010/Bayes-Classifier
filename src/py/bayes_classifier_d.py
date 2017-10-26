@@ -58,7 +58,7 @@ def gi(x):
 		for j in range(dimension):
 			second_term+=tempSecondTerm[j,0]*x[j]
 			third_term+=tempSecondTerm[j,0]*mean[i][j]
-		third_term+math.log(np.linalg.det(covarianceMatrices[i]))
+		third_term+=math.log(np.linalg.det(covarianceMatrices[i]))
 		third_term*=-0.5
 		tot=0
 		for j in range(len(classes)):
@@ -85,7 +85,7 @@ def classVal(x,ind):
 	for j in range(dimension):
 		second_term+=tempSecondTerm[j,0]*x[j]
 		third_term+=tempSecondTerm[j,0]*mean[ind][j]
-	third_term+math.log(np.linalg.det(covarianceMatrices[ind]))
+	third_term+=math.log(np.linalg.det(covarianceMatrices[ind]))
 	third_term*=-0.5
 	tot=0
 	for j in range(len(classes)):
